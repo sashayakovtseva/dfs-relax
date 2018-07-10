@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWithoutCycles(t *testing.T) {
+func TestWithoutCycles_simple(t *testing.T) {
 	g := Graph{
 		1: Arrows{
 			{To: 2, W: 3},
@@ -113,6 +113,65 @@ func TestWithoutCycles_majorCycle(t *testing.T) {
 			{To: 4, W: 9},
 			{To: 1, W: 6},
 		},
+	}
+	require.Equal(t, expect, WithoutCycles(g))
+}
+
+func TestWithoutCycles_mutual(t *testing.T) {
+	g := Graph{
+		1: Arrows{
+			{To: 2, W: 6},
+		},
+		2: Arrows{
+			{To: 1, W: 8},
+			{To: 3, W: 9},
+			{To: 4, W: 7},
+		},
+		3: Arrows{
+			{To: 1, W: 5},
+		},
+		4: Arrows{},
+	}
+	expect := Graph{
+		1: Arrows{},
+		2: Arrows{
+			{To: 1, W: 2},
+			{To: 3, W: 9},
+			{To: 4, W: 7},
+		},
+		3: Arrows{
+			{To: 1, W: 5},
+		},
+		4: Arrows{},
+	}
+	require.Equal(t, expect, WithoutCycles(g))
+}
+
+func TestWithoutCycles_mutualWithCycle(t *testing.T) {
+	g := Graph{
+		1: Arrows{
+			{To: 2, W: 8},
+		},
+		2: Arrows{
+			{To: 1, W: 6},
+			{To: 3, W: 9},
+			{To: 4, W: 7},
+		},
+		3: Arrows{
+			{To: 1, W: 5},
+		},
+		4: Arrows{},
+	}
+	expect := Graph{
+		1: Arrows{},
+		2: Arrows{
+			{To: 3, W: 7},
+			{To: 4, W: 7},
+		},
+		3: Arrows{
+			{To: 1, W: 3},
+		},
+		4: Arrows{},
 	}
 	require.Equal(t, expect, WithoutCycles(g))
 }

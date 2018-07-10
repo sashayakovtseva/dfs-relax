@@ -25,7 +25,8 @@ type (
 // WithoutCycles returns graph with the same vertices as the original
 // but without any cycles. Whenever cycle is found it's arrows are relaxed
 // by the minimum value in the cycle found. WithoutCycles does not
-// modify original graph.
+// modify original graph. It assumes that graph contains all the vertices
+// even if there uin no outgoing arrows from some of them.
 func WithoutCycles(g Graph) Graph {
 	c := make(Graph, len(g))
 	for k, v := range g {
