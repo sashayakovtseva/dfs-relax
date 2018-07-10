@@ -27,12 +27,12 @@ type (
 )
 
 func dfs(g Graph) {
-	enter := make(map[Vertex]int)     // holds ts of vertex entering
-	left := make(map[Vertex]int)      // holds ts of vertex leaving
-	lifo := make(Vertices, 0, len(g)) // lifo to hold vertexes in progress
-	last := make(map[Vertex]int)      // index of the last non watched linked vertex
-	ts := 0                           // timestamp
+	enter := make(map[Vertex]int) // holds ts of vertex entering
+	left := make(map[Vertex]int)  // holds ts of vertex leaving
+	last := make(map[Vertex]int)  // index of the last non watched linked vertex
+	ts := 0                       // timestamp
 
+	var l lifo // lifo to hold vertexes in progress
 	// while we have non visited vertexes
 	for v := range g {
 		if enter[v] != 0 {
@@ -42,14 +42,14 @@ func dfs(g Graph) {
 		ts++
 		enter[v] = ts
 		last[v] = 0
-		lifo = append(lifo, v)
+		l.Push(v)
 		fmt.Printf("entered %d at %d\n", v, enter[v])
 
 	deep:
 		// until lifo is not empty
-		for len(lifo) != 0 {
+		for !l.Empty() {
 			// get the top vetex in the lifo
-			cur := lifo[len(lifo)-1]
+			cur := l.Top()
 
 			// for each linked vertex
 			for i := last[cur]; i < len(g[cur]); i++ {
@@ -61,7 +61,7 @@ func dfs(g Graph) {
 					// add next vertex to the lifo and continue
 					ts++
 					enter[e.To] = ts
-					lifo = append(lifo, e.To)
+					l.Push(e.To)
 
 					fmt.Printf("found tree edge from %d to %d with cost %.2f\n", cur, e.To, e.W)
 					fmt.Printf("entered %d at %d\n", e.To, enter[e.To])
@@ -72,17 +72,16 @@ func dfs(g Graph) {
 					// if both vertices are in the lifo
 					// we have found the back edge, aka cycle
 					fmt.Printf("found back edge from %d to %d with cost %.2f\n", cur, e.To, e.W)
-					cycle := extractCycle(e.To, lifo) // find the cycle vertices
-					relaxCycle(g, cycle)              // modify graph
+					cycle := extractCycle(e.To, l) // find the cycle vertices
+					relaxCycle(g, cycle)           // modify graph
 					// clear data for vertices in the cycle as if we never actualy visited them
 					for _, c := range cycle {
 						last[c] = 0
 						enter[c] = 0
+						l.Pop()
 					}
-					// pop lifo to restart dfs
-					lifo = lifo[:len(lifo)-len(cycle)]
-					if len(lifo) != 0 {
-						last[lifo[len(lifo)-1]] = 0
+					if !l.Empty() {
+						last[l.Top()] = 0
 					}
 
 					fmt.Printf("restarting dfs on modified graph\n")
@@ -102,17 +101,17 @@ func dfs(g Graph) {
 			// leave the current too
 			ts++
 			left[cur] = ts
-			lifo = lifo[:len(lifo)-1]
+			l.Pop()
 			fmt.Printf("left %d at %d\n", cur, left[cur])
 		}
 	}
 }
 
-func extractCycle(to Vertex, lifo Vertices) Vertices {
+func extractCycle(to Vertex, l lifo) Vertices {
 	var cycle []Vertex
-	for i := len(lifo) - 1; i >= 0; i-- {
-		if lifo[i] == to {
-			cycle = append(cycle, lifo[i:]...)
+	for i := len(l) - 1; i >= 0; i-- {
+		if l[i] == to {
+			cycle = append(cycle, l[i:]...)
 			break
 		}
 	}
