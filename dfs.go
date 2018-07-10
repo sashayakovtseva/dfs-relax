@@ -1,9 +1,5 @@
 package relax
 
-import (
-	"fmt"
-)
-
 type (
 	// Vertex holds a signle vertex
 	Vertex interface{}
@@ -26,6 +22,20 @@ type (
 	Graph map[Vertex]Arrows
 )
 
+// WithoutCycles returns graph with the same vertices as the original
+// but without any cycles. Whenever cycle is found it's arrows are relaxed
+// by the minimum value in the cycle found. WithoutCycles does not
+// modify original graph.
+func WithoutCycles(g Graph) Graph {
+	c := make(Graph, len(g))
+	for k, v := range g {
+		c[k] = make(Arrows, len(v))
+		copy(c[k], v)
+	}
+	dfs(c)
+	return c
+}
+
 func dfs(g Graph) {
 	enter := make(map[Vertex]int) // holds ts of vertex entering
 	left := make(map[Vertex]int)  // holds ts of vertex leaving
@@ -43,7 +53,6 @@ func dfs(g Graph) {
 		enter[v] = ts
 		last[v] = 0
 		l.Push(v)
-		fmt.Printf("entered %d at %d\n", v, enter[v])
 
 	deep:
 		// until lifo is not empty
@@ -62,16 +71,12 @@ func dfs(g Graph) {
 					ts++
 					enter[e.To] = ts
 					l.Push(e.To)
-
-					fmt.Printf("found tree edge from %d to %d with cost %.2f\n", cur, e.To, e.W)
-					fmt.Printf("entered %d at %d\n", e.To, enter[e.To])
 					continue deep
 				}
 
 				if left[e.To] == 0 {
 					// if both vertices are in the lifo
 					// we have found the back edge, aka cycle
-					fmt.Printf("found back edge from %d to %d with cost %.2f\n", cur, e.To, e.W)
 					cycle := extractCycle(e.To, l) // find the cycle vertices
 					relaxCycle(g, cycle)           // modify graph
 					// clear data for vertices in the cycle as if we never actualy visited them
@@ -83,17 +88,7 @@ func dfs(g Graph) {
 					if !l.Empty() {
 						last[l.Top()] = 0
 					}
-
-					fmt.Printf("restarting dfs on modified graph\n")
 					continue deep
-				} else if enter[cur] < enter[e.To] {
-					// if the linked vertex was entered after the current vertex
-					// we have found the forward edge
-					fmt.Printf("found forward edge from %d to %d with cost %.2f\n", cur, e.To, e.W)
-				} else {
-					// if the linked vertex was entered before the current vertex
-					// we have found the cross edge
-					fmt.Printf("found cross edge from %d to %d with cost %.2f\n", cur, e.To, e.W)
 				}
 			}
 
@@ -102,7 +97,6 @@ func dfs(g Graph) {
 			ts++
 			left[cur] = ts
 			l.Pop()
-			fmt.Printf("left %d at %d\n", cur, left[cur])
 		}
 	}
 }
@@ -115,7 +109,6 @@ func extractCycle(to Vertex, l lifo) Vertices {
 			break
 		}
 	}
-	fmt.Printf("cycle is %v\n", cycle)
 	return cycle
 }
 
@@ -135,9 +128,6 @@ func relaxCycle(g Graph, cycle Vertices) {
 		}
 	}
 
-	fmt.Printf("cycle throughput is %.2f\n", min)
-	fmt.Printf("%+v\n", g)
-
 	// relax all cycle edges according to found cost
 	for i := 0; i < len(cycle); i++ {
 		cur := cycle[i]
@@ -151,6 +141,4 @@ func relaxCycle(g Graph, cycle Vertices) {
 			}
 		}
 	}
-
-	fmt.Printf("%+v\n", g)
 }
