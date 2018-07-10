@@ -5,10 +5,13 @@ import (
 )
 
 type (
+	// Vertex holds a signle vertex
+	Vertex interface{}
+
 	// Arrow represents a single arrow in a directed graph.
 	Arrow struct {
 		// To holds id of a vertext which arrow goes to.
-		To int
+		To Vertex
 		// W is a weight of an arrow.
 		W float32
 	}
@@ -16,16 +19,19 @@ type (
 	// Arrows is a set of arrows from the particular vertex.
 	Arrows []Arrow
 
+	// Vertices is a set of graph vetices.
+	Vertices []Vertex
+
 	// Graph is graph.
-	Graph map[int]Arrows
+	Graph map[Vertex]Arrows
 )
 
 func dfs(g Graph) {
-	enter := make(map[int]int)     // holds ts of vertex entering
-	left := make(map[int]int)      // holds ts of vertex leaving
-	lifo := make([]int, 0, len(g)) // lifo to hold vertexes in progress
-	last := make(map[int]int)      // index of the last non watched linked vertex
-	ts := 0                        // timestamp
+	enter := make(map[Vertex]int)     // holds ts of vertex entering
+	left := make(map[Vertex]int)      // holds ts of vertex leaving
+	lifo := make(Vertices, 0, len(g)) // lifo to hold vertexes in progress
+	last := make(map[Vertex]int)      // index of the last non watched linked vertex
+	ts := 0                           // timestamp
 
 	// while we have non visited vertexes
 	for v := range g {
@@ -102,8 +108,8 @@ func dfs(g Graph) {
 	}
 }
 
-func extractCycle(to int, lifo []int) []int {
-	var cycle []int
+func extractCycle(to Vertex, lifo Vertices) Vertices {
+	var cycle []Vertex
 	for i := len(lifo) - 1; i >= 0; i-- {
 		if lifo[i] == to {
 			cycle = append(cycle, lifo[i:]...)
@@ -114,7 +120,7 @@ func extractCycle(to int, lifo []int) []int {
 	return cycle
 }
 
-func relaxCycle(g Graph, cycle []int) {
+func relaxCycle(g Graph, cycle Vertices) {
 	var min float32
 
 	// find minimum cost edge in the cycle

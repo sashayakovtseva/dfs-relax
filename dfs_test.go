@@ -38,6 +38,7 @@ func TestDFS(t *testing.T) {
 	dfs(g)
 	require.Equal(t, expect, g)
 }
+
 func TestDFS2(t *testing.T) {
 	g := Graph{
 		1: Arrows{
