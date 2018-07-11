@@ -26,7 +26,8 @@ type (
 // but without any cycles. Whenever cycle is found it's arrows are relaxed
 // by the minimum value in the cycle found. WithoutCycles does not
 // modify original graph. It assumes that graph contains all the vertices
-// even if there uin no outgoing arrows from some of them.
+// even if there uin no outgoing arrows from some of them. It is implied
+// that graph does not contain arrows with zero or negative weight.
 func WithoutCycles(g Graph) Graph {
 	c := make(Graph, len(g))
 	for k, v := range g {
@@ -43,9 +44,16 @@ func dfs(g Graph) {
 	last := make(map[Vertex]int)  // index of the last non watched linked vertex
 	ts := 0                       // timestamp
 
-	var l lifo // lifo to hold vertexes in progress
-	// while we have non visited vertexes
+	var l lifo     // lifo to hold vertexes in progress
+	var visit lifo // visit holds non visited vertices
+
 	for v := range g {
+		visit.Push(v)
+	}
+
+	// while we have non visited vertices
+	for !visit.Empty() {
+		v := visit.Pop()
 		if enter[v] != 0 {
 			continue
 		}
@@ -85,6 +93,7 @@ func dfs(g Graph) {
 						last[c] = 0
 						enter[c] = 0
 						l.Pop()
+						visit.Push(c)
 					}
 					if !l.Empty() {
 						last[l.Top()] = 0

@@ -14,7 +14,7 @@ func (l *lifo) Top() Vertex {
 }
 
 func (l *lifo) Pop() Vertex {
-	top := l.Top
+	top := l.Top()
 	if top != nil {
 		*l = (*l)[:len(*l)-1]
 	}
