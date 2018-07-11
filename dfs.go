@@ -38,6 +38,17 @@ func WithoutCycles(g Graph) Graph {
 	return c
 }
 
+// WithoutCyclesNoCopy returns graph with the same vertices as the original
+// but without any cycles. Whenever cycle is found it's arrows are relaxed
+// by the minimum value in the cycle found. WithoutCyclesNoCopy does
+// modify original graph. It assumes that graph contains all the vertices
+// even if there uin no outgoing arrows from some of them. It is implied
+// that graph does not contain arrows with zero or negative weight.
+func WithoutCyclesNoCopy(g Graph) Graph {
+	dfs(g)
+	return g
+}
+
 func dfs(g Graph) {
 	enter := make(map[Vertex]int) // holds ts of vertex entering
 	left := make(map[Vertex]int)  // holds ts of vertex leaving
@@ -115,8 +126,7 @@ func extractCycle(to Vertex, l lifo) Vertices {
 	var cycle []Vertex
 	for i := len(l) - 1; i >= 0; i-- {
 		if l[i] == to {
-			cycle = append(cycle, l[i:]...)
-			break
+			return Vertices(l[i:])
 		}
 	}
 	return cycle
